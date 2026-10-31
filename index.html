@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'>
+<meta name='theme-color' content='#1f6f50'>
+<meta name='apple-mobile-web-app-capable' content='yes'>
+<meta name='mobile-web-app-capable' content='yes'>
+<meta name='apple-mobile-web-app-title' content='Agenda'>
+<title>Work Agenda 2026</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f5f4;color:#1c2a24;padding-bottom:80px}
+header{background:#1f6f50;color:#fff;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));font-size:18px;font-weight:700;position:sticky;top:0;z-index:5}
+#app{max-width:640px;margin:0 auto;padding:12px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.bar button{width:48px;height:48px;font-size:28px;border:0;border-radius:12px;background:#fff;box-shadow:0 1px 3px #0003}
+.ttl{flex:1;text-align:center;font-weight:700;font-size:18px}
+.ttl small{display:block;font-weight:400;font-size:13px;color:#566}
+.tot{display:flex;gap:10px;margin-bottom:10px}
+.tot div{flex:1;background:#fff;border-radius:12px;padding:10px;text-align:center;box-shadow:0 1px 3px #0002}
+.tot b{display:block;font-size:22px;color:#1f6f50}
+.tot span{font-size:12px;color:#566}
+.card{background:#fff;border-radius:12px;margin:10px 0;padding:12px;box-shadow:0 1px 3px #0002}
+.card.today{border:2px solid #1f6f50}
+.dh{display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px}
+.dh span{font-weight:400;color:#1f6f50}
+.chip{display:inline-flex;align-items:center;background:#e1f1e9;border-radius:16px;padding:4px 4px 4px 12px;margin:3px 4px 3px 0;font-size:14px}
+.chip button{border:0;background:#0001;border-radius:50%;width:26px;height:26px;margin-left:6px;font-size:16px}
+.tm{font-size:13px;color:#566;margin-top:4px;white-space:pre-line}
+select,input{font-size:16px;padding:10px;border:1px solid #c5d0ca;border-radius:10px;width:100%;background:#fff}
+select{margin-top:6px}
+button.main{width:100%;padding:14px;border:0;border-radius:12px;background:#1f6f50;color:#fff;font-size:16px;font-weight:700;margin:6px 0}
+button.ghost{width:100%;padding:12px;border:1px solid #1f6f50;border-radius:12px;background:#fff;color:#1f6f50;font-size:15px;margin:4px 0}
+button.red{width:100%;padding:12px;border:1px solid #b33;border-radius:12px;background:#fff;color:#b33;font-size:15px;margin:4px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 4px;border-bottom:1px solid #e3e9e5;text-align:right}
+th:first-child,td:first-child{text-align:left}
+tr.sum td{font-weight:700;border-top:2px solid #1f6f50}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+label{font-size:12px;color:#566;display:block;margin-top:6px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid #d5ddd8;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:none;padding:12px 0;font-size:13px;color:#566}
+nav button.on{color:#1f6f50;font-weight:700;border-top:3px solid #1f6f50}
+.help{font-size:14px;line-height:1.5}
+.help li{margin-bottom:6px}
+</style>
+</head>
+<body>
+<header>Work Agenda 2026</header>
+<div id='app'></div>
+<nav>
+<button data-a='view' data-v='week'>Week</button>
+<button data-a='view' data-v='totals'>Totals</button>
+<button data-a='view' data-v='jobs'>Jobs</button>
+<button data-a='view' data-v='more'>More</button>
+</nav>
+<script>
+const KEY='workAgenda2026.v1';
+const POUND='\u00a3';
+const K='#Clean - Kamson', KH='#Clean - Kamson Hang House', GY='#Clean Gym', PA='Private House Amy', EX='Extra Hours - Amy', DO='Day off', JC='Job Canceled';
+const DEFAULT={
+start:'2026-11-01',end:'2026-12-31',currency:POUND,
+jobs:[
+{name:K,time:'19:00 - 21:00',hours:2,rate:13},
+{name:KH,time:'16:00 - 17:00',hours:1,rate:13},
+{name:GY,time:'12:00 - 14:30',hours:2.5,rate:14},
+{name:PA,time:'12:00 - 16:00',hours:4,rate:13.5},
+{name:EX,time:'1',hours:1,rate:13.5},
+{name:DO,time:'',hours:0,rate:0},
+{name:JC,time:'',hours:0,rate:0}],
+days:{
+/*week1*/'2026-10-26':[K,KH],'2026-10-27':[K],'2026-10-28':[K],'2026-10-29':[K],'2026-10-30':[K,PA,EX],'2026-10-31':[JC,DO],'2026-11-01':[GY],
+/*week2*/'2026-11-02':[K,KH],'2026-11-03':[K,PA],'2026-11-04':[K],'2026-11-05':[K],'2026-11-06':[K],'2026-11-07':[GY]}
+};
+const clone=o=>JSON.parse(JSON.stringify(o));
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!S||!S.jobs)S=clone(DEFAULT);
+const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+const pad=n=>String(n).padStart(2,'0');
+const DAYN=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const toISO=d=>d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());
+const fromISO=s=>{const p=s.split('-').map(Number);return new Date(Date.UTC(p[0],p[1]-1,p[2]))};
+const addDays=(s,n)=>{const d=fromISO(s);d.setUTCDate(d.getUTCDate()+n);return toISO(d)};
+const dow=s=>(fromISO(s).getUTCDay()+6)%7;
+const mondayOf=s=>addDays(s,-dow(s));
+const fmtDay=s=>DAYN[dow(s)]+' '+fromISO(s).getUTCDate()+' '+MON[fromISO(s).getUTCMonth()];
+const now=new Date();
+const TODAY=toISO(new Date(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())));
+const num=v=>{const n=parseFloat(v);return isNaN(n)?0:n};
+const money=n=>S.currency+n.toFixed(2);
+const fmtH=n=>n.toFixed(1)+' h';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+function weeks(){const out=[];let m=mondayOf(S.start);let g=0;while(m<=S.end&&g<200){out.push(m);m=addDays(m,7);g++}return out.length?out:[mondayOf(S.start)]}
+function dayStats(iso){
+const names=S.days[iso]||[];let h=0,p=0;const times=[];
+names.forEach(n=>{const j=S.jobs.find(x=>x.name===n);if(j){h+=num(j.hours);p+=num(j.hours)*num(j.rate);if(j.time!=='')times.push(j.time)}});
+return{names,h,p,times};
+}
+let view='week';
+let wk=0;
+(function(){const W=weeks();const m=mondayOf(TODAY);const i=W.indexOf(m);wk=i>=0?i:0})();
+function dayCard(d,st){
+const chips=st.names.map((n,k)=>`<span class='chip'>${esc(n)}<button data-a='rm' data-d='${d}' data-k='${k}'>&times;</button></span>`).join('');
+const opts=S.jobs.map(j=>`<option>${esc(j.name)}</option>`).join('');
+const sel=st.names.length<4?`<select data-c='add' data-d='${d}'><option value=''>+ Add job</option>${opts}</select>`:'';
+const tm=st.times.length?`<div class='tm'>${esc(st.times.join('\n'))}</div>`:'';
+return `<div class='card${d===TODAY?' today':''}'><div class='dh'>${fmtDay(d)}<span>${fmtH(st.h)} &middot; ${money(st.p)}</span></div>${chips}${tm}${sel}</div>`;
+}
+function weekView(){
+const W=weeks();if(wk>=W.length)wk=W.length-1;if(wk<0)wk=0;
+const mon=W[wk];let th=0,tp=0,cards='';
+for(let i=0;i<7;i++){const d=addDays(mon,i);const st=dayStats(d);th+=st.h;tp+=st.p;cards+=dayCard(d,st)}
+return `<div class='bar'><button data-a='prev'>&lsaquo;</button><div class='ttl'>Week ${wk+1} of ${W.length}<small>${fmtDay(mon)} - ${fmtDay(addDays(mon,6))}</small></div><button data-a='next'>&rsaquo;</button></div><div class='tot'><div><b>${fmtH(th)}</b><span>Week hours</span></div><div><b>${money(tp)}</b><span>Week pay</span></div></div><button class='ghost' data-a='today'>Go to this week</button>${cards}`;
+}
+function totalsView(){
+const W=weeks();let th=0,tp=0;const per={};
+S.jobs.forEach(j=>per[j.name]={c:0,h:0,p:0});
+let rows='';
+W.forEach((m,i)=>{let h=0,p=0;for(let k=0;k<7;k++){const d=addDays(m,k);const st=dayStats(d);h+=st.h;p+=st.p;st.names.forEach(n=>{const j=S.jobs.find(x=>x.name===n);if(j){per[n].c++;per[n].h+=num(j.hours);per[n].p+=num(j.hours)*num(j.rate)}})}th+=h;tp+=p;rows+=`<tr><td>Wk ${i+1} (${fmtDay(m)})</td><td>${fmtH(h)}</td><td>${money(p)}</td></tr>`});
+let jr='';
+S.jobs.forEach(j=>{const x=per[j.name];jr+=`<tr><td>${esc(j.name)}</td><td>${x.c}x</td><td>${fmtH(x.h)}</td><td>${money(x.p)}</td></tr>`});
+return `<div class='tot'><div><b>${fmtH(th)}</b><span>Total hours</span></div><div><b>${money(tp)}</b><span>Total pay</span></div></div><div class='card'><table><tr><th>Week</th><th>Hours</th><th>Pay</th></tr>${rows}<tr class='sum'><td>Total</td><td>${fmtH(th)}</td><td>${money(tp)}</td></tr></table></div><div class='card'><b>By job</b><table><tr><th>Job</th><th>Times</th><th>Hours</th><th>Pay</th></tr>${jr}</table></div>`;
+}
+function jobsView(){
+const cards=S.jobs.map((j,i)=>`<div class='card'><label>Name</label><input data-c='jf' data-i='${i}' data-f='name' value='${esc(j.name)}'><div class='row2'><div><label>Working hours (text)</label><input data-c='jf' data-i='${i}' data-f='time' value='${esc(j.time)}'></div><div><label>Hours booked</label><input type='number' step='0.25' inputmode='decimal' data-c='jf' data-i='${i}' data-f='hours' value='${esc(j.hours)}'></div></div><label>Rate per hour (${esc(S.currency)})</label><input type='number' step='0.01' inputmode='decimal' data-c='jf' data-i='${i}' data-f='rate' value='${esc(j.rate)}'><button class='red' data-a='deljob' data-i='${i}'>Delete job</button></div>`).join('');
+return `<div class='card help'>Jobs are your Legend table (Name, Working Hours, Hours Booked, Sum per Hour). Pick them from the Week screen.</div>${cards}<button class='main' data-a='addjob'>+ New job</button>`;
+}
+function moreView(){
+return `<div class='card'><b>Planner dates</b><div class='row2'><div><label>Start</label><input type='date' data-c='set' data-f='start' value='${S.start}'></div><div><label>End</label><input type='date' data-c='set' data-f='end' value='${S.end}'></div></div><label>Currency symbol</label><input data-c='set' data-f='currency' value='${esc(S.currency)}'></div>
+<div class='card'><b>Excel (CSV)</b><button class='main' data-a='exp'>Export full backup (CSV)</button><button class='ghost' data-a='rep'>Export report with totals (CSV)</button><label>Import a backup CSV</label><input type='file' accept='.csv,text/csv' data-c='imp'></div>
+<div class='card'><button class='red' data-a='reset'>Reset to original Excel data</button></div>
+<div class='card help'><b>How to use</b><ol><li>Week: use the arrows to move between weeks. Tap Add job on a day, tap the x on a job to remove it.</li><li>Hours, pay and times are worked out from the Jobs screen, like the Excel sheet.</li><li>Jobs: change names, working hours, hours booked and hourly rate.</li><li>Totals: weekly and overall hours and pay.</li><li>Data is stored on this phone only. Export a CSV now and then as a backup and to open in Excel. Import the same CSV to restore.</li></ol></div>`;
+}
+function render(){
+const v={week:weekView,totals:totalsView,jobs:jobsView,more:moreView}[view];
+document.getElementById('app').innerHTML=v();
+document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+}
+const Q=String.fromCharCode(34);
+const cell=v=>{v=String(v);return(v.includes(',')||v.includes(Q)||v.includes('\n')||v.includes('\r'))?Q+v.split(Q).join(Q+Q)+Q:v};
+const line=a=>a.map(cell).join(',');
+function parseCSV(t){
+const rows=[];let r=[],c='',q=false;
+for(let i=0;i<t.length;i++){const ch=t[i];
+if(q){if(ch===Q){if(t[i+1]===Q){c+=Q;i++}else q=false}else c+=ch}
+else if(ch===Q)q=true;
+else if(ch===','){r.push(c);c=''}
+else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);rows.push(r);r=[];c=''}
+else c+=ch}
+if(c!==''||r.length){r.push(c);rows.push(r)}
+return rows;
+}
+function parseDate(s){
+s=String(s).trim();let m;
+if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)))return m[1]+'-'+pad(m[2])+'-'+pad(m[3]);
+if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)))return m[3]+'-'+pad(m[2])+'-'+pad(m[1]);
+return null;
+}
+function download(name,text){
+const blob=new Blob(['\uFEFF'+text],{type:'text/csv'});
+try{const f=new File([blob],name,{type:'text/csv'});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:name}).catch(()=>{});return}}catch(e){}
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+}
+function exportFull(){
+const L=[line(['Type','Field1','Field2','Field3','Field4','Field5']),line(['Setting','Start',S.start]),line(['Setting','End',S.end]),line(['Setting','Currency',S.currency]),line(['Job','Name','Working Hours','Hours Booked','Sum per Hour'])];
+S.jobs.forEach(j=>L.push(line(['Job',j.name,j.time,j.hours,j.rate])));
+Object.keys(S.days).sort().forEach(d=>{if(S.days[d].length)L.push(line(['Day',d].concat(S.days[d])))});
+download('work-agenda-backup.csv',L.join('\r\n'));
+}
+function exportReport(){
+const L=[line(['Week','Date','Day','Job 1','Job 2','Job 3','Job 4','Times','Hours','Pay'])];
+let th=0,tp=0;
+weeks().forEach((m,i)=>{for(let k=0;k<7;k++){const d=addDays(m,k);const st=dayStats(d);th+=st.h;tp+=st.p;L.push(line(['Week '+(i+1),d,DAYN[k],st.names[0]||'',st.names[1]||'',st.names[2]||'',st.names[3]||'',st.times.join(' | '),st.h,st.p.toFixed(2)]))}});
+L.push(line(['Total','','','','','','','',th,tp.toFixed(2)]));
+download('work-agenda-report.csv',L.join('\r\n'));
+}
+function importCSV(file){
+const fr=new FileReader();
+fr.onload=()=>{
+const rows=parseCSV(String(fr.result).replace(/^\uFEFF/,''));
+const N={start:S.start,end:S.end,currency:S.currency,jobs:[],days:{}};
+rows.forEach(r=>{const t=(r[0]||'').trim().toLowerCase();
+if(t==='setting'){const k=(r[1]||'').toLowerCase();if(k==='start'){const d=parseDate(r[2]);if(d)N.start=d}else if(k==='end'){const d=parseDate(r[2]);if(d)N.end=d}else if(k==='currency'&&r[2])N.currency=r[2]}
+else if(t==='job'){if((r[1]||'').trim().toLowerCase()==='name')return;if(r[1]&&r[1].trim())N.jobs.push({name:r[1].trim(),time:r[2]||'',hours:num(r[3]),rate:num(r[4])})}
+else if(t==='day'){const d=parseDate(r[1]);if(d)N.days[d]=r.slice(2,6).map(x=>x.trim()).filter(Boolean)}});
+if(!N.jobs.length){alert('No Job rows found. Use a CSV made by Export full backup.');return}
+if(confirm('Replace the data on this phone with the CSV ('+N.jobs.length+' jobs, '+Object.keys(N.days).length+' days)?')){S=N;save();render();alert('Imported.')}
+};
+fr.readAsText(file);
+}
+document.addEventListener('click',e=>{
+const b=e.target.closest('[data-a]');if(!b)return;
+const a=b.dataset.a;
+if(a==='view'){view=b.dataset.v;render();window.scrollTo(0,0)}
+else if(a==='prev'){wk--;render();window.scrollTo(0,0)}
+else if(a==='next'){wk++;render();window.scrollTo(0,0)}
+else if(a==='today'){const i=weeks().indexOf(mondayOf(TODAY));wk=i>=0?i:0;render()}
+else if(a==='rm'){S.days[b.dataset.d].splice(+b.dataset.k,1);save();render()}
+else if(a==='addjob'){S.jobs.push({name:'New job '+(S.jobs.length+1),time:'',hours:0,rate:0});save();render()}
+else if(a==='deljob'){const j=S.jobs[+b.dataset.i];if(confirm('Delete '+j.name+' and remove it from all days?')){Object.keys(S.days).forEach(d=>{S.days[d]=S.days[d].filter(n=>n!==j.name)});S.jobs.splice(+b.dataset.i,1);save();render()}}
+else if(a==='exp')exportFull();
+else if(a==='rep')exportReport();
+else if(a==='reset'){if(confirm('Replace everything on this phone with the original Excel data?')){S=clone(DEFAULT);save();render()}}
+});
+document.addEventListener('change',e=>{
+const t=e.target;const c=t.dataset.c;if(!c)return;
+if(c==='add'){if(!t.value)return;const d=t.dataset.d;S.days[d]=S.days[d]||[];if(S.days[d].length<4)S.days[d].push(t.value);save();render()}
+else if(c==='jf'){const j=S.jobs[+t.dataset.i];const f=t.dataset.f;
+if(f==='name'){const nn=t.value.trim()||j.name;Object.keys(S.days).forEach(d=>{S.days[d]=S.days[d].map(n=>n===j.name?nn:n)});j.name=nn}
+else if(f==='time')j.time=t.value;
+else j[f]=num(t.value);
+save();render()}
+else if(c==='set'){const f=t.dataset.f;if(f==='currency')S.currency=t.value||POUND;else if(t.value)S[f]=t.value;save();render()}
+else if(c==='imp'){if(t.files[0])importCSV(t.files[0]);t.value=''}
+});
+function setupPWA(){
+try{
+const c=document.createElement('canvas');c.width=c.height=512;
+const g=c.getContext('2d');g.fillStyle='#1f6f50';g.fillRect(0,0,512,512);
+g.fillStyle='#ffffff';g.font='bold 320px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(POUND,256,276);
+const icon=c.toDataURL('image/png');
+const a=document.createElement('link');a.rel='apple-touch-icon';a.href=icon;document.head.appendChild(a);
+const man={name:'Work Agenda 2026',short_name:'Agenda',start_url:location.href.split('#')[0],scope:location.href.split('#')[0].replace(/[^/]*$/,''),display:'standalone',background_color:'#f3f5f4',theme_color:'#1f6f50',icons:[{src:icon,sizes:'512x512',type:'image/png'}]};
+const m=document.createElement('link');m.rel='manifest';m.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:'application/manifest+json'}));document.head.appendChild(m);
+}catch(e){}
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+setupPWA();
+render();
+</script>
+</body>
+</html>
