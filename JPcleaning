@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'>
+<meta name='theme-color' content='#1f6f50'>
+<meta name='apple-mobile-web-app-capable' content='yes'>
+<meta name='mobile-web-app-capable' content='yes'>
+<meta name='apple-mobile-web-app-title' content='Agenda'>
+<title>Work Agenda</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f5f4;color:#1c2a24;padding-bottom:80px}
+header{background:#1f6f50;color:#fff;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));font-size:18px;font-weight:700;position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px}
+header select{margin:0;width:auto;min-width:120px;font-weight:700;color:#1f6f50;padding:8px 10px}
+#app{max-width:640px;margin:0 auto;padding:12px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.bar button{width:48px;height:48px;font-size:28px;border:0;border-radius:12px;background:#fff;box-shadow:0 1px 3px #0003}
+.ttl{flex:1;text-align:center;font-weight:700;font-size:18px}
+.ttl small{display:block;font-weight:400;font-size:13px;color:#566}
+.tot{display:flex;gap:10px;margin-bottom:10px}
+.tot div{flex:1;background:#fff;border-radius:12px;padding:10px;text-align:center;box-shadow:0 1px 3px #0002}
+.tot b{display:block;font-size:22px;color:#1f6f50}
+.tot span{font-size:12px;color:#566}
+.card{background:#fff;border-radius:12px;margin:10px 0;padding:12px;box-shadow:0 1px 3px #0002}
+.card.today{border:2px solid #1f6f50}
+.dh{display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px}
+.dh span{font-weight:400;color:#1f6f50}
+.chip{display:inline-flex;align-items:center;background:#e1f1e9;border-radius:16px;padding:4px 4px 4px 12px;margin:3px 4px 3px 0;font-size:14px}
+.chip button{border:0;background:#0001;border-radius:50%;width:26px;height:26px;margin-left:6px;font-size:16px}
+.tm{font-size:13px;color:#566;margin-top:4px;white-space:pre-line}
+select,input{font-size:16px;padding:10px;border:1px solid #c5d0ca;border-radius:10px;width:100%;background:#fff}
+select{margin-top:6px}
+button.main{width:100%;padding:14px;border:0;border-radius:12px;background:#1f6f50;color:#fff;font-size:16px;font-weight:700;margin:6px 0}
+button.ghost{width:100%;padding:12px;border:1px solid #1f6f50;border-radius:12px;background:#fff;color:#1f6f50;font-size:15px;margin:4px 0}
+button.red{width:100%;padding:12px;border:1px solid #b33;border-radius:12px;background:#fff;color:#b33;font-size:15px;margin:4px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 4px;border-bottom:1px solid #e3e9e5;text-align:right}
+th:first-child,td:first-child{text-align:left}
+tr.sum td{font-weight:700;border-top:2px solid #1f6f50}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+label{font-size:12px;color:#566;display:block;margin-top:6px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid #d5ddd8;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:none;padding:12px 0;font-size:13px;color:#566}
+nav button.on{color:#1f6f50;font-weight:700;border-top:3px solid #1f6f50}
+.help{font-size:14px;line-height:1.5}
+.help li{margin-bottom:6px}
+</style>
+</head>
+<body>
+<header><span>Work Agenda</span><select id='ag' data-c='ag'></select></header>
+<div id='app'></div>
+<nav>
+<button data-a='view' data-v='week'>Week</button>
+<button data-a='view' data-v='totals'>Totals</button>
+<button data-a='view' data-v='jobs'>Jobs</button>
+<button data-a='view' data-v='more'>More</button>
+</nav>
+<script>
+const KEY='workAgenda.v2';
+const OLDKEY='workAgenda2026.v1';
+const POUND='\u00a3';
+const K='#Clean - Kamson', KH='#Clean - Kamson Hang House', GY='#Clean Gym', PA='Private House Amy', EX='Extra Hours - Amy', DO='Day off', JC='Job Canceled';
+const DEFAULT={
+currency:POUND,order:['2026','2027'],cur:'2026',
+agendas:{
+/*y2026*/'2026':{start:'2026-11-01',end:'2026-12-31',ratesFrom:'',
+jobs:[
+{name:K,time:'19:00 - 21:00',hours:2,rate:13,rate2:null},
+{name:KH,time:'16:00 - 17:00',hours:1,rate:13,rate2:null},
+{name:GY,time:'12:00 - 14:30',hours:2.5,rate:14,rate2:null},
+{name:PA,time:'12:00 - 16:00',hours:4,rate:13.5,rate2:null},
+{name:EX,time:'1',hours:1,rate:13.5,rate2:null},
+{name:DO,time:'All Day',hours:1,rate:0,rate2:null},
+{name:JC,time:'All Day',hours:1,rate:0,rate2:null}],
+days:{
+/*week1*/'2026-10-26':[K,KH],'2026-10-27':[K],'2026-10-28':[K],'2026-10-29':[K],'2026-10-30':[K,PA,EX],'2026-10-31':[JC,DO],'2026-11-01':[GY],
+/*week2*/'2026-11-02':[K,KH],'2026-11-03':[K,PA],'2026-11-04':[K],'2026-11-05':[K],'2026-11-06':[K],'2026-11-07':[GY],
+/*week3*/'2026-11-09':[K,KH],'2026-11-10':[K,PA],'2026-11-11':[K],'2026-11-12':[K],'2026-11-13':[K],'2026-11-14':[GY]}},
+/*y2027*/'2027':{start:'2027-01-01',end:'2027-12-31',ratesFrom:'2027-04-01',
+jobs:[
+{name:K,time:'19:00 - 21:00',hours:2,rate:13,rate2:13.21},
+{name:KH,time:'16:00 - 17:00',hours:1,rate:13,rate2:13.21},
+{name:GY,time:'12:00 - 14:30',hours:2.5,rate:14,rate2:14.55},
+{name:PA,time:'12:00 - 16:00',hours:4,rate:13.5,rate2:14.5},
+{name:EX,time:'1',hours:1,rate:13.5,rate2:14.5},
+{name:DO,time:'',hours:0,rate:0,rate2:0},
+{name:JC,time:'',hours:0,rate:0,rate2:0}],
+days:{}}}
+};
+const clone=o=>JSON.parse(JSON.stringify(o));
+let S=null;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!S||!S.agendas){
+let old=null;try{old=JSON.parse(localStorage.getItem(OLDKEY))}catch(e){old=null}
+S=clone(DEFAULT);
+if(old&&old.jobs){
+S.currency=old.currency||POUND;
+S.agendas['2026']={start:old.start,end:old.end,ratesFrom:'',jobs:old.jobs.map(j=>({name:j.name,time:j.time,hours:j.hours,rate:j.rate,rate2:null})),days:old.days||{}};
+}
+}
+if(!S.agendas[S.cur])S.cur=S.order[0];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+const A=()=>S.agendas[S.cur];
+const pad=n=>String(n).padStart(2,'0');
+const DAYN=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const toISO=d=>d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());
+const fromISO=s=>{const p=s.split('-').map(Number);return new Date(Date.UTC(p[0],p[1]-1,p[2]))};
+const addDays=(s,n)=>{const d=fromISO(s);d.setUTCDate(d.getUTCDate()+n);return toISO(d)};
+const dow=s=>(fromISO(s).getUTCDay()+6)%7;
+const mondayOf=s=>addDays(s,-dow(s));
+const fmtDay=s=>DAYN[dow(s)]+' '+fromISO(s).getUTCDate()+' '+MON[fromISO(s).getUTCMonth()];
+const fmtLong=s=>fromISO(s).getUTCDate()+' '+MON[fromISO(s).getUTCMonth()]+' '+fromISO(s).getUTCFullYear();
+const now=new Date();
+const TODAY=toISO(new Date(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())));
+const num=v=>{const n=parseFloat(v);return isNaN(n)?0:n};
+const has=v=>v!==null&&v!==undefined&&v!=='';
+const money=n=>S.currency+n.toFixed(2);
+const fmtH=n=>n.toFixed(1)+' h';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+function weeks(a){const out=[];let m=mondayOf(a.start);let g=0;while(m<=a.end&&g<400){out.push(m);m=addDays(m,7);g++}return out.length?out:[mondayOf(a.start)]}
+function rateOn(a,j,iso){return(a.ratesFrom&&iso>=a.ratesFrom&&has(j.rate2))?num(j.rate2):num(j.rate)}
+function dayStats(a,iso){
+const names=a.days[iso]||[];let h=0,p=0;const times=[];
+names.forEach(n=>{const j=a.jobs.find(x=>x.name===n);if(j){h+=num(j.hours);p+=num(j.hours)*rateOn(a,j,iso);if(j.time!=='')times.push(j.time)}});
+return{names,h,p,times};
+}
+let view='week';
+const WK={};
+function getWk(){if(WK[S.cur]===undefined){const i=weeks(A()).indexOf(mondayOf(TODAY));WK[S.cur]=i>=0?i:0}return WK[S.cur]}
+function dayCard(a,d,st){
+const chips=st.names.map((n,k)=>`<span class='chip'>${esc(n)}<button data-a='rm' data-d='${d}' data-k='${k}'>&times;</button></span>`).join('');
+const opts=a.jobs.map(j=>`<option>${esc(j.name)}</option>`).join('');
+const sel=st.names.length<4?`<select data-c='add' data-d='${d}'><option value=''>+ Add job</option>${opts}</select>`:'';
+const tm=st.times.length?`<div class='tm'>${esc(st.times.join('\n'))}</div>`:'';
+return `<div class='card${d===TODAY?' today':''}'><div class='dh'>${fmtDay(d)}<span>${fmtH(st.h)} &middot; ${money(st.p)}</span></div>${chips}${tm}${sel}</div>`;
+}
+function weekView(){
+const a=A();const W=weeks(a);let w=getWk();if(w>=W.length)w=W.length-1;if(w<0)w=0;WK[S.cur]=w;
+const mon=W[w];let th=0,tp=0,cards='';
+for(let i=0;i<7;i++){const d=addDays(mon,i);const st=dayStats(a,d);th+=st.h;tp+=st.p;cards+=dayCard(a,d,st)}
+return `<div class='bar'><button data-a='prev'>&lsaquo;</button><div class='ttl'>Week ${w+1} of ${W.length}<small>${fmtDay(mon)} - ${fmtDay(addDays(mon,6))}</small></div><button data-a='next'>&rsaquo;</button></div><div class='tot'><div><b>${fmtH(th)}</b><span>Week hours</span></div><div><b>${money(tp)}</b><span>Week pay</span></div></div><button class='ghost' data-a='today'>Go to this week</button>${cards}`;
+}
+function agendaTotals(a){
+let th=0,tp=0,rows='';const per={};
+a.jobs.forEach(j=>per[j.name]={c:0,h:0,p:0});
+weeks(a).forEach((m,i)=>{let h=0,p=0;for(let k=0;k<7;k++){const d=addDays(m,k);const st=dayStats(a,d);h+=st.h;p+=st.p;st.names.forEach(n=>{const j=a.jobs.find(x=>x.name===n);if(j){per[n].c++;per[n].h+=num(j.hours);per[n].p+=num(j.hours)*rateOn(a,j,d)}})}th+=h;tp+=p;rows+=`<tr><td>Wk ${i+1} (${fmtDay(m)})</td><td>${fmtH(h)}</td><td>${money(p)}</td></tr>`});
+return{th,tp,rows,per};
+}
+function combined(){
+const own={};let th=0,tp=0;const rows=[];
+S.order.forEach(id=>{const a=S.agendas[id];let h=0,p=0;
+weeks(a).forEach(m=>{for(let k=0;k<7;k++){const d=addDays(m,k);const st=dayStats(a,d);if(!st.names.length||own[d])continue;own[d]=id;h+=st.h;p+=st.p}});
+rows.push({id,h,p});th+=h;tp+=p});
+return{rows,th,tp};
+}
+function totalsView(){
+const a=A();const T=agendaTotals(a);
+let jr='';
+a.jobs.forEach(j=>{const x=T.per[j.name];jr+=`<tr><td>${esc(j.name)}</td><td>${x.c}x</td><td>${fmtH(x.h)}</td><td>${money(x.p)}</td></tr>`});
+const C=combined();
+const cr=C.rows.map(r=>`<tr><td>${esc(r.id)}</td><td>${fmtH(r.h)}</td><td>${money(r.p)}</td></tr>`).join('');
+return `<div class='tot'><div><b>${fmtH(T.th)}</b><span>Hours - ${esc(S.cur)}</span></div><div><b>${money(T.tp)}</b><span>Pay - ${esc(S.cur)}</span></div></div><div class='card'><table><tr><th>Week</th><th>Hours</th><th>Pay</th></tr>${T.rows}<tr class='sum'><td>Total ${esc(S.cur)}</td><td>${fmtH(T.th)}</td><td>${money(T.tp)}</td></tr></table></div><div class='card'><b>By job (${esc(S.cur)})</b><table><tr><th>Job</th><th>Times</th><th>Hours</th><th>Pay</th></tr>${jr}</table></div><div class='card'><b>All agendas</b><table><tr><th>Agenda</th><th>Hours</th><th>Pay</th></tr>${cr}<tr class='sum'><td>Grand total</td><td>${fmtH(C.th)}</td><td>${money(C.tp)}</td></tr></table><div class='tm'>A date that is booked in two agendas (for example the week of 28 Dec) is counted once, in the first agenda.</div></div>`;
+}
+function jobsView(){
+const a=A();
+const cards=a.jobs.map((j,i)=>`<div class='card'><label>Name</label><input data-c='jf' data-i='${i}' data-f='name' value='${esc(j.name)}'><div class='row2'><div><label>Working hours (text)</label><input data-c='jf' data-i='${i}' data-f='time' value='${esc(j.time)}'></div><div><label>Hours booked</label><input type='number' step='0.25' inputmode='decimal' data-c='jf' data-i='${i}' data-f='hours' value='${esc(j.hours)}'></div></div><div class='row2'><div><label>Rate per hour (${esc(S.currency)})</label><input type='number' step='0.01' inputmode='decimal' data-c='jf' data-i='${i}' data-f='rate' value='${esc(j.rate)}'></div>${a.ratesFrom?`<div><label>Rate from ${esc(fmtLong(a.ratesFrom))}</label><input type='number' step='0.01' inputmode='decimal' data-c='jf' data-i='${i}' data-f='rate2' value='${has(j.rate2)?esc(j.rate2):''}'></div>`:''}</div><button class='red' data-a='deljob' data-i='${i}'>Delete job</button></div>`).join('');
+return `<div class='card help'>Jobs for agenda <b>${esc(S.cur)}</b> (your Legend table: Name, Working Hours, Hours Booked, Sum per Hour). Pick them from the Week screen.</div>${cards}<button class='main' data-a='addjob'>+ New job</button>`;
+}
+function moreView(){
+const a=A();
+return `<div class='card'><b>Agenda ${esc(S.cur)}</b><div class='row2'><div><label>Start</label><input type='date' data-c='set' data-f='start' value='${a.start}'></div><div><label>End</label><input type='date' data-c='set' data-f='end' value='${a.end}'></div></div><label>New hourly rates apply from (leave empty for none)</label><input type='date' data-c='set' data-f='ratesFrom' value='${a.ratesFrom||''}'><label>Pay rise % (fills the "Rate from" column on the Jobs screen)</label><div class='row2'><input type='number' step='0.1' inputmode='decimal' id='rise' placeholder='for example 3.9'><button class='ghost' data-a='rise'>Apply pay rise</button></div><button class='ghost' data-a='newag'>+ New agenda (copy these jobs)</button><button class='red' data-a='delag'>Delete agenda ${esc(S.cur)}</button></div>
+<div class='card'><b>All agendas</b><label>Currency symbol</label><input data-c='set' data-f='currency' value='${esc(S.currency)}'></div>
+<div class='card'><b>Excel (CSV)</b><button class='main' data-a='exp'>Export full backup, all agendas (CSV)</button><button class='ghost' data-a='rep'>Export report of ${esc(S.cur)} with totals (CSV)</button><label>Import a backup CSV</label><input type='file' accept='.csv,text/csv' data-c='imp'></div>
+<div class='card'><button class='red' data-a='reset'>Reset everything to original Excel data</button></div>
+<div class='card help'><b>How to use</b><ol><li>Top right: choose the agenda (2026, 2027 ...).</li><li>Week: use the arrows to move between weeks. Tap Add job on a day, tap the x on a job to remove it.</li><li>Hours, pay and times are worked out from the Jobs screen, like the Excel sheet. In 2027 the rates change from the date set above (1 Apr 2027).</li><li>Totals: weekly and overall hours and pay for the chosen agenda, plus all agendas together.</li><li>Data is stored on this phone only. Export a CSV now and then as a backup and to open in Excel. Import the same CSV to restore.</li></ol></div>`;
+}
+function render(){
+const v={week:weekView,totals:totalsView,jobs:jobsView,more:moreView}[view];
+document.getElementById('ag').innerHTML=S.order.map(id=>`<option value='${esc(id)}'${id===S.cur?' selected':''}>${esc(id)}</option>`).join('');
+document.getElementById('app').innerHTML=v();
+document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+}
+const Q=String.fromCharCode(34);
+const cell=v=>{v=String(v);return(v.includes(',')||v.includes(Q)||v.includes('\n')||v.includes('\r'))?Q+v.split(Q).join(Q+Q)+Q:v};
+const line=a=>a.map(cell).join(',');
+function parseCSV(t){
+const rows=[];let r=[],c='',q=false;
+for(let i=0;i<t.length;i++){const ch=t[i];
+if(q){if(ch===Q){if(t[i+1]===Q){c+=Q;i++}else q=false}else c+=ch}
+else if(ch===Q)q=true;
+else if(ch===','){r.push(c);c=''}
+else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);rows.push(r);r=[];c=''}
+else c+=ch}
+if(c!==''||r.length){r.push(c);rows.push(r)}
+return rows;
+}
+function parseDate(s){
+s=String(s).trim();let m;
+if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)))return m[1]+'-'+pad(m[2])+'-'+pad(m[3]);
+if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)))return m[3]+'-'+pad(m[2])+'-'+pad(m[1]);
+return null;
+}
+function download(name,text){
+const blob=new Blob(['\uFEFF'+text],{type:'text/csv'});
+try{const f=new File([blob],name,{type:'text/csv'});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:name}).catch(()=>{});return}}catch(e){}
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+}
+function exportFull(){
+const L=[line(['Type','Field1','Field2','Field3','Field4','Field5','Field6']),line(['Setting','Currency',S.currency]),line(['Agenda','Agenda name','Start','End','Rates from']),line(['Job','Agenda name','Name','Working Hours','Hours Booked','Sum per Hour','Rate from date'])];
+S.order.forEach(id=>{const a=S.agendas[id];
+L.push(line(['Agenda',id,a.start,a.end,a.ratesFrom||'']));
+a.jobs.forEach(j=>L.push(line(['Job',id,j.name,j.time,j.hours,j.rate,has(j.rate2)?j.rate2:''])));
+Object.keys(a.days).sort().forEach(d=>{if(a.days[d].length)L.push(line(['Day',id,d].concat(a.days[d])))})});
+download('work-agenda-backup.csv',L.join('\r\n'));
+}
+function exportReport(){
+const a=A();
+const L=[line(['Week','Date','Day','Job 1','Job 2','Job 3','Job 4','Times','Hours','Pay'])];
+let th=0,tp=0;
+weeks(a).forEach((m,i)=>{for(let k=0;k<7;k++){const d=addDays(m,k);const st=dayStats(a,d);th+=st.h;tp+=st.p;L.push(line(['Week '+(i+1),d,DAYN[k],st.names[0]||'',st.names[1]||'',st.names[2]||'',st.names[3]||'',st.times.join(' | '),st.h,st.p.toFixed(2)]))}});
+L.push(line(['Total','','','','','','','',th,tp.toFixed(2)]));
+download('work-agenda-'+S.cur+'-report.csv',L.join('\r\n'));
+}
+function importCSV(file){
+const fr=new FileReader();
+fr.onload=()=>{
+const rows=parseCSV(String(fr.result).replace(/^\uFEFF/,''));
+const v2=rows.some(r=>(r[0]||'').trim().toLowerCase()==='agenda');
+let N,msg;
+if(v2){
+N={currency:S.currency,order:[],cur:S.cur,agendas:{}};
+const get=id=>{if(!N.agendas[id]){N.agendas[id]={start:'',end:'',ratesFrom:'',jobs:[],days:{}};N.order.push(id)}return N.agendas[id]};
+rows.forEach(r=>{const t=(r[0]||'').trim().toLowerCase();const id=(r[1]||'').trim();
+if(t==='setting'){if(id.toLowerCase()==='currency'&&r[2])N.currency=r[2]}
+else if(t==='agenda'){if(!id||id.toLowerCase()==='agenda name')return;const a=get(id);a.start=parseDate(r[2]||'')||a.start;a.end=parseDate(r[3]||'')||a.end;a.ratesFrom=parseDate(r[4]||'')||''}
+else if(t==='job'){if(!id||id.toLowerCase()==='agenda name')return;const nm=(r[2]||'').trim();if(nm)get(id).jobs.push({name:nm,time:r[3]||'',hours:num(r[4]),rate:num(r[5]),rate2:has(r[6])?num(r[6]):null})}
+else if(t==='day'){const d=parseDate(r[2]||'');if(id&&d)get(id).days[d]=r.slice(3,7).map(x=>x.trim()).filter(Boolean)}});
+N.order=N.order.filter(id=>N.agendas[id].jobs.length&&N.agendas[id].start&&N.agendas[id].end);
+if(!N.order.length){alert('No agendas found. Use a CSV made by Export full backup.');return}
+if(!N.agendas[N.cur])N.cur=N.order[0];
+msg='Replace ALL data on this phone with the CSV ('+N.order.length+' agendas)?';
+}else{
+N=clone(S);const a=N.agendas[N.cur];const jobs=[],days={};
+rows.forEach(r=>{const t=(r[0]||'').trim().toLowerCase();
+if(t==='setting'){const k=(r[1]||'').toLowerCase();if(k==='start'){const d=parseDate(r[2]||'');if(d)a.start=d}else if(k==='end'){const d=parseDate(r[2]||'');if(d)a.end=d}else if(k==='currency'&&r[2])N.currency=r[2]}
+else if(t==='job'){if((r[1]||'').trim().toLowerCase()==='name')return;if(r[1]&&r[1].trim())jobs.push({name:r[1].trim(),time:r[2]||'',hours:num(r[3]),rate:num(r[4]),rate2:null})}
+else if(t==='day'){const d=parseDate(r[1]||'');if(d)days[d]=r.slice(2,6).map(x=>x.trim()).filter(Boolean)}});
+if(!jobs.length){alert('No Job rows found. Use a CSV made by Export full backup.');return}
+a.jobs=jobs;a.days=days;
+msg='This is an old single-agenda CSV. Replace only agenda '+N.cur+' with it ('+jobs.length+' jobs, '+Object.keys(days).length+' days)?';
+}
+if(confirm(msg)){S=N;save();render();alert('Imported.')}
+};
+fr.readAsText(file);
+}
+document.addEventListener('click',e=>{
+const b=e.target.closest('[data-a]');if(!b)return;
+const a=b.dataset.a;const ag=A();
+if(a==='view'){view=b.dataset.v;render();window.scrollTo(0,0)}
+else if(a==='prev'){WK[S.cur]=getWk()-1;render();window.scrollTo(0,0)}
+else if(a==='next'){WK[S.cur]=getWk()+1;render();window.scrollTo(0,0)}
+else if(a==='today'){const i=weeks(ag).indexOf(mondayOf(TODAY));WK[S.cur]=i>=0?i:0;render()}
+else if(a==='rm'){ag.days[b.dataset.d].splice(+b.dataset.k,1);save();render()}
+else if(a==='addjob'){ag.jobs.push({name:'New job '+(ag.jobs.length+1),time:'',hours:0,rate:0,rate2:null});save();render()}
+else if(a==='deljob'){const j=ag.jobs[+b.dataset.i];if(confirm('Delete '+j.name+' and remove it from all days of agenda '+S.cur+'?')){Object.keys(ag.days).forEach(d=>{ag.days[d]=ag.days[d].filter(n=>n!==j.name)});ag.jobs.splice(+b.dataset.i,1);save();render()}}
+else if(a==='rise'){
+const p=parseFloat((document.getElementById('rise')||{}).value);
+if(isNaN(p)){alert('Type the pay rise percentage first, for example 3.9');return}
+if(!ag.ratesFrom){alert('Set the date the new rates apply from first.');return}
+if(confirm('Set every job\'s new rate to its rate plus '+p+'%?')){ag.jobs.forEach(j=>{j.rate2=Number((num(j.rate)*(1+p/100)).toFixed(2))});save();render()}}
+else if(a==='newag'){
+const id=(prompt('Name of the new agenda (for example 2028)')||'').trim();
+if(!id)return;
+if(S.agendas[id]){alert('That agenda already exists.');return}
+const y=/^\d{4}$/.test(id)?id:String(now.getFullYear());
+S.agendas[id]={start:y+'-01-01',end:y+'-12-31',ratesFrom:'',jobs:ag.jobs.map(j=>({name:j.name,time:j.time,hours:j.hours,rate:(ag.ratesFrom&&has(j.rate2))?j.rate2:j.rate,rate2:null})),days:{}};
+S.order.push(id);S.cur=id;save();render()}
+else if(a==='delag'){
+if(S.order.length<2){alert('You need at least one agenda.');return}
+if(confirm('Delete agenda '+S.cur+' and all its bookings? Export a backup first if unsure.')){delete S.agendas[S.cur];S.order=S.order.filter(x=>x!==S.cur);S.cur=S.order[0];save();render()}}
+else if(a==='exp')exportFull();
+else if(a==='rep')exportReport();
+else if(a==='reset'){if(confirm('Replace everything on this phone with the original Excel data?')){S=clone(DEFAULT);save();render()}}
+});
+document.addEventListener('change',e=>{
+const t=e.target;const c=t.dataset.c;if(!c)return;
+const ag=A();
+if(c==='ag'){S.cur=t.value;save();render();window.scrollTo(0,0)}
+else if(c==='add'){if(!t.value)return;const d=t.dataset.d;ag.days[d]=ag.days[d]||[];if(ag.days[d].length<4)ag.days[d].push(t.value);save();render()}
+else if(c==='jf'){const j=ag.jobs[+t.dataset.i];const f=t.dataset.f;
+if(f==='name'){const nn=t.value.trim()||j.name;Object.keys(ag.days).forEach(d=>{ag.days[d]=ag.days[d].map(n=>n===j.name?nn:n)});j.name=nn}
+else if(f==='time')j.time=t.value;
+else if(f==='rate2')j.rate2=t.value===''?null:num(t.value);
+else j[f]=num(t.value);
+save();render()}
+else if(c==='set'){const f=t.dataset.f;
+if(f==='currency')S.currency=t.value||POUND;
+else if(f==='ratesFrom')ag.ratesFrom=t.value||'';
+else if(t.value)ag[f]=t.value;
+save();render()}
+else if(c==='imp'){if(t.files[0])importCSV(t.files[0]);t.value=''}
+});
+function setupPWA(){
+try{
+const c=document.createElement('canvas');c.width=c.height=512;
+const g=c.getContext('2d');g.fillStyle='#1f6f50';g.fillRect(0,0,512,512);
+g.fillStyle='#ffffff';g.font='bold 320px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(POUND,256,276);
+const icon=c.toDataURL('image/png');
+const a=document.createElement('link');a.rel='apple-touch-icon';a.href=icon;document.head.appendChild(a);
+const man={name:'Work Agenda',short_name:'Agenda',start_url:location.href.split('#')[0],scope:location.href.split('#')[0].replace(/[^/]*$/,''),display:'standalone',background_color:'#f3f5f4',theme_color:'#1f6f50',icons:[{src:icon,sizes:'512x512',type:'image/png'}]};
+const m=document.createElement('link');m.rel='manifest';m.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:'application/manifest+json'}));document.head.appendChild(m);
+}catch(e){}
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+setupPWA();
+render();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+the new index.html code, 321 lines
+const C='agenda-v2';
+self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html'])));self.skipWaiting()});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))));self.clients.claim()});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const cp=r.clone();caches.open(C).then(c=>c.put(e.request,cp));return r}).catch(()=>caches.match(e.request).then(m=>m||caches.match('./index.html'))))});
